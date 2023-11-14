@@ -29,11 +29,15 @@ function configure_rti_connext_dds_arm()
     install_rtipkg_arm(connextVersion, "armv7Linux4gcc7.5.0");
     install_rtipkg_arm(connextVersion, "armv8Linux4gcc7.3.0");
 
+    % Register toolchain
+    register_toolchain('RTI Connext 6.x for Arm 32 bits', 'RTIConnextArm32');
+    register_toolchain('RTI Connext 6.x for Arm 64 bits', 'RTIConnextArm64');
+
     % Reset the TargetTegistry to load the new toolchain
     RTW.TargetRegistry.getInstance('reset');
 end
 
-function install_rtipkg_arm(version, rtipkg_arch)
+function install_rtipkg_arm(version, rtipkgArch)
     % INSTALL_RTIPKG_ARM install the corresponding LM package for the
     % architecture specified in the corresponding NDDSHOME environment
     % variable.
@@ -42,18 +46,18 @@ function install_rtipkg_arm(version, rtipkg_arch)
 
     % Check the architecture is not already installed
     nddshome = string(getenv('NDDSHOME'));
-    if exist(nddshome + '/lib/' + rtipkg_arch, "dir")
-        warning('The architecture %s is already installed.', rtipkg_arch);
+    if exist(nddshome + '/lib/' + rtipkgArch, "dir")
+        warning('The architecture %s is already installed.', rtipkgArch);
     else
         matlabPackageName = append("RTI Connext DDS ", version);
         rtipkgName = sprintf("rti_connext_dds-%s-lm-target-%s.rtipkg", ...
-            version, rtipkg_arch);
+            version, rtipkgArch);
 
-        if contains(rtipkg_arch, 'armv7')
+        if contains(rtipkgArch, 'armv7')
             rtipkgPath = ...
                 string(rticonnextdds_simulink_ddsblockset_arm.getInstallationLocation(...
                     matlabPackageName + ' - Armv7'));
-        elseif contains(rtipkg_arch, 'armv8')
+        elseif contains(rtipkgArch, 'armv8')
             rtipkgPath = ...
                 string(rticonnextdds_simulink_ddsblockset_arm.getInstallationLocation(...
                     matlabPackageName + ' - Armv8'));
@@ -66,5 +70,20 @@ function install_rtipkg_arm(version, rtipkg_arch)
             + " -u " + fullfile('"' + rtipkgPath + '"', rtipkgName);
 
         system(command);
+    end
+end
+
+function register_toolchain(name, package)
+    % REGISTER_TOOLCHAIN register the toolchain to be used in the 
+    % Simulink DDS Blockset. The toolchain must be in the MATLAB path.
+    %   register_toolchain('RTI Connext 6.x for Arm 32 bits','RTIConnextArm32')
+
+    projectName = sprintf('%s Project', name);
+    tc = target.get('Toolchain', projectName);
+    if isempty(tc)
+        dds.internal.coder.(package).createToolchain('UserInstall', true);
+    else
+        target.remove(tc);
+        dds.internal.coder.(package).createToolchain('UserInstall', true);
     end
 end

@@ -3,5 +3,5 @@ function setupModel(modelName)
 
 %   Copyright 2021 The MathWorks, Inc.
 
-set_param(modelName,'Toolchain','RTI Connext 6.x for Arm Project');
+set_param(modelName,'Toolchain','RTI Connext 6.x for Arm 64 bits Project');
 end
