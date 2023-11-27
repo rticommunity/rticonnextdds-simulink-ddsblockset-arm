@@ -17,6 +17,22 @@ function registeredObjects = createToolchain(varargin)
 
     cmakebuilder = target.create("CMakeBuilder");
     cmakebuilder.Generator = "Unix Makefiles";
+
+    if ispc
+        if isempty(getenv("CONNEXT_ARM_TOOLBOX_GMAKE_PATH"))
+            cmakebuilder.CommandLineCacheEntries(end+1) =...
+                target.create('CMakeCacheEntry', 'Name', 'CMAKE_MAKE_PROGRAM', 'Value', [strrep(matlabroot,'\','/') '/bin/win64/gmake.exe']);
+        else
+            if isfile(getenv("CONNEXT_ARM_TOOLBOX_GMAKE_PATH"))
+                cmakebuilder.CommandLineCacheEntries(end+1) =...
+                    target.create('CMakeCacheEntry', 'Name', 'CMAKE_MAKE_PROGRAM', 'Value', getenv("CONNEXT_ARM_TOOLBOX_GMAKE_PATH"));
+            else
+                error('CONNEXT_ARM_TOOLBOX_GMAKE_PATH environment variable is not pointing to a valid gmake.exe file.')
+            end
+
+        end
+    end
+
     cmakebuilder.SupportedBuildTypes(1) = cmakebuildtype;
     cmakebuilder.SupportedBuildTypes(2) = cmakebuildtype2;
     cmakebuilder.SupportedBuildTypes(3) = cmakebuildtype3;
